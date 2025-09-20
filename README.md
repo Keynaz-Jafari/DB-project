@@ -14,7 +14,7 @@ DB-project
 ├── vite.config.js        # Frontend Vite config
 └── README.md             # This file
 
-````
+```
 
 ---
 
@@ -29,9 +29,9 @@ You can choose **either backend folder** depending on your setup (they are struc
 ### Steps
 1. Clone the repository and switch to the correct branch.
 2. Navigate into the backend folder you want to use:
-   ```bash
+```bash
    cd backend
-````
+```
 
 or
 
