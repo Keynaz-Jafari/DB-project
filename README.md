@@ -1,5 +1,4 @@
 
-```markdown
 # Setup Guide
 
 ## Project Structure
