@@ -1,143 +1,149 @@
 
+```markdown
 # Setup Guide
 
-## Run the Backend and Database
-
-To run the Django application and the database, you will need to have Docker Engine on your device.
-
-Clone the project repository and  switch to the main branch. Once in the main branch, build an image using the *Dockerfile* in the project directory and name it whatever you want but remember the name you use for the image because you’re going to have to edit the `docker-compose.ym`l file.
-
-Once the image is built, go to the `docker-compose.yml` file and put your image name in the app service:
-
-```jsx
-<SNIP>
-      timeout: 5s
-      retries: 5
-
-  app:
-    image: <your_image_name> # <----- Enter your image name here
-    restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      DJANGO_SECRET: ${DJANGO_SECRET}
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_HOST: db
-<SNIP>
-```
-
-Then, create a `.env` file with the following format and replace the values with the ones you’re going to use. 
-
-### .env :
-
-```jsx
-# --- MySQL container creds ---
-MYSQL_ROOT_PASSWORD=rootpass
-MYSQL_DATABASE=university
-MYSQL_USER=uniapp
-MYSQL_PASSWORD=uniapp
-
-# --- Django settings ---
-DJANGO_SECRET=change-me
-DB_NAME=${MYSQL_DATABASE}
-DB_USER=${MYSQL_USER}
-DB_PASSWORD=${MYSQL_PASSWORD}
-DB_HOST=127.0.0.1          # outside Docker, we still connect to localhost
-DB_PORT=3306
+## Project Structure
 
 ```
 
-Finally, run the containers using the below command:
+DB-project
+├── Project-Backend/      # Old Django backend (with Docker + MySQL setup)
+├── backend/              # New Django backend (with Docker + MySQL setup)
+├── src/                  # React frontend source code
+├── public/               # Frontend assets
+├── package.json          # Frontend dependencies
+├── vite.config.js        # Frontend Vite config
+└── README.md             # This file
 
-```jsx
-docker compose --env-file .env up -d 
-```
-
-**Congrats! The backend and database should be up and running.** 
-
----
-
-## Run the Frontend
-
-## **0. Download the Project**
-
-Click on the link below:  
-
-[**GitHub – DB Project (keinaz branch](https://github.com/itzIlya/DB-project/tree/keinaz))**
-
-Download the **ZIP file** of the repository on branch **`keinaz`** (this branch contains the frontend React project).
-
-Extract the ZIP to your desired location.
+````
 
 ---
 
-## **1. Install Node.js**
+## 1. Run the Backend and Database
 
-Install **Node.js 18+** for your OS from nodejs.org.
+Both `Project-Backend/` and `backend/` contain a Django + MySQL stack with Docker.  
+You can choose **either backend folder** depending on your setup (they are structurally the same).  
 
----
+### Prerequisites
+- Install **Docker Engine** and **Docker Compose**.
 
-## **2. Install Dependencies**
+### Steps
+1. Clone the repository and switch to the correct branch.
+2. Navigate into the backend folder you want to use:
+   ```bash
+   cd backend
+````
 
-In the project folder, run:
+or
 
 ```bash
-npm install
+cd Project-Backend
 ```
 
-This installs all required packages (React, Vite, Tailwind, MUI, Axios, Framer Motion, etc.) from `package.json`.
+3. Build the backend Docker image:
+
+   ```bash
+   docker build -t my-django-app .
+   ```
+
+   Replace `my-django-app` with a name of your choice.
+
+4. Open `docker-compose.yml` in the same folder and set your image name under the `app` service:
+
+   ```yaml
+   app:
+     image: my-django-app   # <---- use your image name here
+     restart: unless-stopped
+     depends_on:
+       db:
+         condition: service_healthy
+   ```
+
+5. Create a `.env` file in the same backend folder:
+
+   ```env
+   # --- MySQL container creds ---
+   MYSQL_ROOT_PASSWORD=rootpass
+   MYSQL_DATABASE=university
+   MYSQL_USER=uniapp
+   MYSQL_PASSWORD=uniapp
+
+   # --- Django settings ---
+   DJANGO_SECRET=change-me
+   DB_NAME=${MYSQL_DATABASE}
+   DB_USER=${MYSQL_USER}
+   DB_PASSWORD=${MYSQL_PASSWORD}
+   DB_HOST=db
+   DB_PORT=3306
+   ```
+
+6. Start the services:
+
+   ```bash
+   docker compose --env-file .env up -d
+   ```
+
+✅ Your Django backend and MySQL database should now be running.
 
 ---
 
-## **3. Backend Connection**
+## 2. Run the Frontend
 
-The frontend proxies API calls to Django (default **port 8000**) via `vite.config.js`:
+The React frontend is in the root of the repository.
 
-```jsx
+### Prerequisites
 
-proxy: {
-  "/api": {
-    target: "http://localhost:8000",
-    changeOrigin: true,
-    secure: false,
-  },
-}
+* Install **Node.js 18+** from [nodejs.org](https://nodejs.org/).
 
-```
+### Steps
 
-If your backend is running on another host/port, update the `target` value.
+1. From the repo root:
+
+   ```bash
+   npm install
+   ```
+
+2. API requests are proxied to the Django backend through `vite.config.js`:
+
+   ```js
+   proxy: {
+     "/api": {
+       target: "http://localhost:8000",
+       changeOrigin: true,
+       secure: false,
+     },
+   }
+   ```
+
+   * If your backend runs on a different port/host, update the `target`.
+
+3. Add your frontend port (`5173` by default) to Django’s `CSRF_TRUSTED_ORIGINS` in `settings.py`:
+
+   ```python
+   CSRF_TRUSTED_ORIGINS = [
+       "http://localhost:5173",
+       "http://localhost:5186",
+       "http://localhost:5187",
+       "http://localhost:5188",
+       "http://localhost:5189",
+   ]
+   ```
+
+4. Run the development server:
+
+   ```bash
+   npm run dev
+   ```
+
+   * The app will be available at [http://localhost:5173](http://localhost:5173).
 
 ---
 
-## **4. CSRF Trusted Origins**
+## 3. Summary
 
-In Django `settings.py`, ensure your frontend port is included:
+* **Backend + Database**: choose `backend/` or `Project-Backend/`, configure `.env`, and run with Docker.
+* **Frontend**: install dependencies, configure backend proxy, and run with Vite.
+* **Connection**: ensure frontend port is listed in Django’s `CSRF_TRUSTED_ORIGINS`.
 
-```jsx
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",
-    "http://localhost:5186",
-    "http://localhost:5187",
-    "http://localhost:5188",
-    "http://localhost:5189",
-]
-```
 
-If you use a different port (e.g., `5175`), add it here.
-
----
-
-## **5. Run the Frontend**
-
-```jsx
-npm run dev
-```
-
-- Default URL: [http://localhost:5173](http://localhost:5173/)
-- This URL must be in `CSRF_TRUSTED_ORIGINS` on the backend.
-
-**Now you have the project running!**
